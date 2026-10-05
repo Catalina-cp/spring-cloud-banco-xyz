@@ -1,6 +1,8 @@
 package com.bancoxyz.api_cuentas.controller;
 
 import com.bancoxyz.api_cuentas.dto.CuentaResumenDTO;
+import com.bancoxyz.api_cuentas.event.TransaccionEvento;
+import com.bancoxyz.api_cuentas.event.TransaccionEventProducer;
 import com.bancoxyz.api_cuentas.service.CuentaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,10 +19,12 @@ import java.util.List;
 public class CuentaController {
 
     private final CuentaService service;
+    private final TransaccionEventProducer eventProducer;
 
     @Autowired
-    public CuentaController(CuentaService service) {
+    public CuentaController(CuentaService service, TransaccionEventProducer eventProducer) {
         this.service = service;
+        this.eventProducer = eventProducer;
     }
 
     @GetMapping
@@ -32,6 +36,7 @@ public class CuentaController {
     @GetMapping("/{cuentaId}")
     public ResponseEntity<CuentaResumenDTO> obtenerPorId(@PathVariable Long cuentaId) {
         CuentaResumenDTO cuenta = service.obtenerPorId(cuentaId);
+        eventProducer.publicarEvento(new TransaccionEvento(cuentaId, "CONSULTA_CUENTA"));
         return new ResponseEntity<>(cuenta, HttpStatus.OK);
     }
 }
