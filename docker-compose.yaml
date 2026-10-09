@@ -74,6 +74,43 @@ services:
       - eureka-server
       - kafka
 
+  clientes-service:
+    build: ./clientes-service
+    ports:
+      - "8084:8084"
+    environment:
+      CONFIG_SERVER_HOST: config-server
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      DB_HOST: mysql
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/banco-xyz/protocol/openid-connect/certs
+    depends_on:
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+      mysql:
+        condition: service_started
+  
+  pagos-service:
+    build: ./pagos-service
+    ports:
+      - "8083:8083"
+    environment:
+      CONFIG_SERVER_HOST: config-server
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      DB_HOST: mysql
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/banco-xyz/protocol/openid-connect/certs
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+      mysql:
+        condition: service_started
+      kafka:
+        condition: service_started
+
   keycloak:
     image: quay.io/keycloak/keycloak:26.0
     command: start-dev
